@@ -15,6 +15,7 @@ Manages a [context](../contexts.md).
 context create <name> <context-type>
 context delete <name>
 context update <name> [<options>]
+context inspect <name>
 ```
 
 ## Description
@@ -29,6 +30,9 @@ The `context` operator manages [context](../contexts.md) instances.
 
 - The `update` command adds new data to a given context. The pipeline returns
   information about what the update performed.
+
+- The `inspect` command dumps a specific context's user-provided data, usually
+  the context's content.
 
 ### `<name>`
 
@@ -65,4 +69,10 @@ Delete the context named `feodo`:
 
 ```
 context delete feodo
+```
+
+Inspect all data provided to `feodo`:
+
+```
+context inspect feodo
 ```
