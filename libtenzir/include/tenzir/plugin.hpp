@@ -727,8 +727,8 @@ public:
 
   virtual ~context() noexcept = default;
 
-  /// Emits context information for every event in `slice` in order.
-  virtual auto apply(table_slice slice, parameter_map parameters) const
+  /// Emits context information for every event in `array` in order.
+  virtual auto apply(typed_array array) const
     -> caf::expected<std::vector<typed_array>>
     = 0;
 

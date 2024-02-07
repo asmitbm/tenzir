@@ -18,6 +18,7 @@
 #include "tenzir/logger.hpp"
 #include "tenzir/table_slice_builder.hpp"
 #include "tenzir/type.hpp"
+#include "tenzir/typed_array.hpp"
 #include "tenzir/view.hpp"
 
 #include <arrow/api.h>
@@ -1376,6 +1377,15 @@ auto series_builder::finish_as_table_slice(std::string_view name)
 auto series_builder::finish_assert_one_slice(std::string_view name)
   -> table_slice {
   auto result = finish_as_table_slice(name);
+  if (result.empty()) {
+    return {};
+  }
+  TENZIR_ASSERT_CHEAP(result.size() == 1);
+  return std::move(result[0]);
+}
+
+auto series_builder::finish_assert_one_array() -> typed_array {
+  auto result = finish();
   if (result.empty()) {
     return {};
   }

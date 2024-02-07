@@ -48,53 +48,22 @@ public:
     // nop
   }
 
-  /// Emits context information for every event in `slice` in order.
-  auto apply(table_slice slice, context::parameter_map parameters) const
+  auto apply(typed_array array) const
     -> caf::expected<std::vector<typed_array>> override {
-    auto resolved_slice = resolve_enumerations(slice);
-    auto field_name = std::optional<std::string>{};
-    for (const auto& [key, value] : parameters) {
-      if (key == "field") {
-        if (not value) {
-          return caf::make_error(ec::invalid_argument,
-                                 "invalid argument type for `field`: expected "
-                                 "a string");
-        }
-        field_name = *value;
-        continue;
-      }
-    }
-    if (not field_name) {
-      return caf::make_error(ec::invalid_argument, "missing argument `field`");
-    }
-    auto field_builder = series_builder{};
-    auto column_offset = slice.schema().resolve_key_or_concept(*field_name);
-    if (not column_offset) {
-      for (auto i = size_t{0}; i < slice.rows(); ++i) {
-        field_builder.null();
-      }
-      return field_builder.finish();
-    }
-    auto [type, slice_array] = column_offset->get(resolved_slice);
-    for (const auto& value : values(type, *slice_array)) {
+    auto builder = series_builder{};
+    for (const auto& value : values(array.type, *array.array)) {
       if (auto it = context_entries.find(value); it != context_entries.end()) {
-        auto r = field_builder.record();
-        r.field("key", it->first);
-        r.field("context", it->second);
-        r.field("timestamp", std::chrono::system_clock::now());
+        builder.data(it->second);
       } else {
-        field_builder.null();
+        builder.null();
       }
     }
-    return field_builder.finish();
+    return builder.finish();
   }
 
   auto snapshot(parameter_map parameters) const
     -> caf::expected<expression> override {
     auto column = parameters["field"];
-    if (not column) {
-      return caf::make_error(ec::invalid_argument, "missing 'field' parameter");
-    }
     auto keys = list{};
     keys.reserve(context_entries.size());
     auto first_index = std::optional<size_t>{};
@@ -180,11 +149,6 @@ public:
     auto query_f = [key_values_list = std::move(key_values_list)](
                      parameter_map params) -> caf::expected<expression> {
       auto column = params["field"];
-      if (not column) {
-        return caf::make_error(ec::invalid_argument,
-                               "missing 'field' parameter for lookup in "
-                               "lookup-table");
-      }
       return expression{
         predicate{
           field_extractor(*column),
