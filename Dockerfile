@@ -97,6 +97,7 @@ COPY --from=development --chown=tenzir:tenzir $PREFIX/ $PREFIX/
 COPY --from=development --chown=tenzir:tenzir /var/cache/tenzir/ /var/cache/tenzir
 COPY --from=development --chown=tenzir:tenzir /var/lib/tenzir/ /var/lib/tenzir
 COPY --from=development --chown=tenzir:tenzir /var/log/tenzir/ /var/log/tenzir
+COPY --from=development --chown=tenzir:tenzir /opt/aws-sdk-cpp/lib/ /opt/aws-sdk-cpp/lib
 
 RUN apt-get update && \
     apt-get -y --no-install-recommends install \
