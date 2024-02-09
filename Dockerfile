@@ -11,6 +11,11 @@ WORKDIR /tmp/tenzir
 COPY scripts ./scripts
 
 RUN ./scripts/debian/install-dev-dependencies.sh && rm -rf /var/lib/apt/lists/*
+RUN ./scripts/debian/install-aws-sdk.sh
+
+# -- build-source --------------------------------------------------------------
+
+FROM dependencies AS build-source
 
 # Tenzir
 COPY changelog ./changelog
@@ -26,7 +31,7 @@ COPY CMakeLists.txt LICENSE README.md tenzir.spdx.json VERSIONING.md \
 
 # -- development ---------------------------------------------------------------
 
-FROM dependencies AS development
+FROM build-source AS development
 
 ENV PREFIX="/opt/tenzir" \
     PATH="/opt/tenzir/bin:${PATH}" \
@@ -213,7 +218,7 @@ FROM tenzir-ce AS tenzir-node-ce
 
 ENTRYPOINT ["tenzir-node"]
 
-# -- tenzir-demo --------------------------------------------------------------
+# -- tenzir-demo ---------------------------------------------------------------
 
 FROM tenzir-ce AS tenzir-demo
 
@@ -234,7 +239,7 @@ RUN /demo-node/setup.bash
 
 ENTRYPOINT ["tenzir-node"]
 
-# -- tenzir-ee -------------------------------------------------------------------
+# -- tenzir-ee -----------------------------------------------------------------
 
 FROM tenzir-ce AS tenzir-ee
 
@@ -247,11 +252,11 @@ FROM tenzir-ee AS tenzir-node-ee
 
 ENTRYPOINT ["tenzir-node"]
 
-# -- tenzir-node -----------------------------------------------------------------
+# -- tenzir-node ---------------------------------------------------------------
 
 FROM tenzir-node-ce AS tenzir-node
 
-# -- tenzir ----------------------------------------------------------------------
+# -- tenzir --------------------------------------------------------------------
 
 # As a last stage we re-introduce the community edition as tenzir so that it's
 # the default when not specifying a build target.
